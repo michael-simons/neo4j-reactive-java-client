@@ -1,0 +1,19 @@
+= Neo4j Reactive Java Client
+
+== Requirements
+
+The Reactive Java Client requires Java 11 higher.
+Goto http://jdk.java.net/11/[JDK 11 General-Availability Release] for binaries for you operating systems.
+The Reactive Streams Java Driver does not work with an embedded version of Neo4j but needs an instance that can be addressed over the Bolt protocol.
+
+== Versioning
+
+=== `@Deprecated`
+
+APIs marked with the `@Deprecated annotation at the class or method level will remain supported until the next major release but it is recommended to stop using them.
+
+== Maintainers
+
+Michael Simons:: michael.simons@neo4j.com
+Gerrit Meier:: gerrit.meier@neo4j.com
+

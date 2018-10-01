@@ -1,0 +1,17 @@
+= Contribution guidelines
+
+== Code of Conduct
+
+== Quickstart
+
+== Conventions
+
+=== Commit messages
+
+=== Code formatters
+
+=== Code styles
+
+===== Maven
+
+*  https://maven.apache.org/developers/conventions/code.html
