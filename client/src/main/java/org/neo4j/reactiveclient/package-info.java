@@ -17,4 +17,5 @@
 /**
  * This packages contains the API of the reactive stream client implementation.
  */
+@reactor.util.annotation.NonNullApi
 package org.neo4j.reactiveclient;

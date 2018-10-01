@@ -15,7 +15,12 @@
  */
 package org.neo4j.reactiveclient.examples;
 
+import java.time.Duration;
+
 import org.neo4j.reactiveclient.Neo4jClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,11 +31,20 @@ import reactor.core.publisher.Mono;
  * @author Michael J. Simons
  */
 public class HelloWorldExample {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(HelloWorldExample.class);
+
 	public static void main(final String... args) {
+		SLF4JBridgeHandler.removeHandlersForRootLogger();
+		SLF4JBridgeHandler.install();
+
 		var client = Neo4jClients.create("bolt://localhost:7687", "neo4j", "music");
 
-		Flux.from(client.selectStuff())
-			.doOnNext(System.out::println)
+		Flux.from(client.execute("MATCH (n) RETURN n"))
+			.map(r -> r.get("n").asNode().labels())
+			.take(Duration.ofMillis(500L))
+			.take(5)
+			.doOnNext(r -> LOGGER.info(r.toString()))
 			.then(Mono.from(client.close()))
 			.doOnSuccess(aVoid -> System.out.println("Client was closed."))
 			.subscribe();

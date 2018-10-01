@@ -75,7 +75,8 @@
 		<maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
 		<neo4j.version>3.4.5</neo4j.version>
 		<neo4j-java-driver.version>1.6.3</neo4j-java-driver.version>
-		<reactor-releasetrain.version>Bismuth-RELEASE</reactor-releasetrain.version>
+		<reactor-releasetrain.version>Californium-RELEASE</reactor-releasetrain.version>
+		<slf4j.version>1.7.25</slf4j.version>
 	</properties>
 
 	<dependencyManagement>
@@ -111,6 +112,21 @@
 				<groupId>org.neo4j.driver</groupId>
 				<artifactId>neo4j-java-driver</artifactId>
 				<version>${neo4j-java-driver.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-simple</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>jul-to-slf4j</artifactId>
+				<version>${slf4j.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

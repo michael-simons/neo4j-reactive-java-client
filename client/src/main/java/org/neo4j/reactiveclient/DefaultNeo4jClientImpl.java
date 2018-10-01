@@ -15,11 +15,17 @@
  */
 package org.neo4j.reactiveclient;
 
+import java.util.Map;
+import java.util.Optional;
+
 import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.Record;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.annotation.NonNull;
+import reactor.util.annotation.Nullable;
 
 /**
  * Default implementation of {@link Neo4jClient}.
@@ -36,11 +42,26 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 
 	@Override
 	public Publisher<Void> close() {
-		return Mono.defer(() -> Mono.fromCompletionStage(this.driver.closeAsync()));
+		return Mono.fromCompletionStage(() -> this.driver.closeAsync());
 	}
 
 	@Override
-	public Publisher<String> selectStuff() {
-		return Flux.just("a", "b", "c");
+	public Publisher<Record> execute(@NonNull final String query) {
+		return execute(query, Map.of());
+	}
+
+	@Override
+	public Publisher<Record> execute(@NonNull final String query, @Nullable  final Map<String, Object> parameter) {
+		return Flux.push(sink ->
+			driver.session().runAsync(query, Optional.ofNullable(parameter).orElseGet(Map::of))
+				.thenCompose(statementResultCursor -> statementResultCursor.forEachAsync(sink::next))
+				.whenComplete(((resultSummary, error) -> {
+					if (error != null) {
+						sink.error(error);
+					} else {
+						sink.complete();
+					}
+				}))
+		);
 	}
 }
