@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.StatementResultCursor;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
@@ -42,7 +43,7 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 
 	@Override
 	public Publisher<Void> close() {
-		return Mono.fromCompletionStage(() -> this.driver.closeAsync());
+		return Mono.fromCompletionStage(this.driver::closeAsync);
 	}
 
 	@Override
@@ -51,18 +52,25 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 	}
 
 	@Override
-	public Publisher<Record> execute(@NonNull final String query, @Nullable  final Map<String, Object> parameter) {
+	public Publisher<Record> execute(@NonNull final String query, @Nullable final Map<String, Object> parameter) {
 
-		return Flux.push(sink ->
+		return Mono.<StatementResultCursor>create(sink ->
 			driver.session().runAsync(query, Optional.ofNullable(parameter).orElseGet(Map::of))
-				.thenCompose(statementResultCursor -> statementResultCursor.forEachAsync(sink::next))
-				.whenComplete(((resultSummary, error) -> {
+				.whenComplete((cursor, error) -> {
 					if (error != null) {
 						sink.error(error);
 					} else {
-						sink.complete();
+						sink.success(cursor);
 					}
-				}))
-		);
+				})
+		).flatMapMany(cursor -> publishRecords(cursor, fetchNextRecord(cursor)));
+	}
+
+	private static Flux<Record> publishRecords(final StatementResultCursor cursor, final Mono<Record> nextRecord) {
+		return nextRecord.flatMapMany(it -> nextRecord.concatWith(publishRecords(cursor, fetchNextRecord(cursor))));
+	}
+
+	private static Mono<Record> fetchNextRecord(final StatementResultCursor cursor) {
+		return Mono.fromCompletionStage(cursor::nextAsync);
 	}
 }

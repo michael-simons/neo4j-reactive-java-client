@@ -15,8 +15,6 @@
  */
 package org.neo4j.reactiveclient.examples;
 
-import java.time.Duration;
-
 import org.neo4j.reactiveclient.Neo4jClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +40,6 @@ public class HelloWorldExample {
 
 		Flux.from(client.execute("MATCH (n) RETURN n"))
 			.map(r -> r.get("n").asNode().labels())
-			.take(Duration.ofMillis(500L))
 			.take(5)
 			.doOnNext(r -> LOGGER.info(r.toString()))
 			.then(Mono.from(client.close()))
