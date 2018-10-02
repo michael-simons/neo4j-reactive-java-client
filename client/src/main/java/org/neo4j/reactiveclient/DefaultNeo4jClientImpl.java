@@ -17,16 +17,23 @@ package org.neo4j.reactiveclient;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResultCursor;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
 
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Operators;
 import reactor.util.annotation.NonNull;
 import reactor.util.annotation.Nullable;
+import reactor.util.context.Context;
 
 /**
  * Default implementation of {@link Neo4jClient}.
@@ -53,7 +60,6 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 
 	@Override
 	public Publisher<Record> execute(@NonNull final String query, @Nullable final Map<String, Object> parameter) {
-
 		return Mono.<StatementResultCursor>create(sink ->
 			driver.session().runAsync(query, Optional.ofNullable(parameter).orElseGet(Map::of))
 				.whenComplete((cursor, error) -> {
@@ -63,14 +69,125 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 						sink.success(cursor);
 					}
 				})
-		).flatMapMany(cursor -> publishRecords(cursor, fetchNextRecord(cursor)));
+		).flatMapMany(RecordEmitter::forCursor);
 	}
 
-	private static Flux<Record> publishRecords(final StatementResultCursor cursor, final Mono<Record> nextRecord) {
-		return nextRecord.flatMapMany(it -> nextRecord.concatWith(publishRecords(cursor, fetchNextRecord(cursor))));
-	}
+	private static class RecordEmitter {
 
-	private static Mono<Record> fetchNextRecord(final StatementResultCursor cursor) {
-		return Mono.fromCompletionStage(cursor::nextAsync);
+		private final AtomicLong requestsPending = new AtomicLong();
+		private final AtomicBoolean active = new AtomicBoolean(true);
+		private final AtomicBoolean emissionScheduled = new AtomicBoolean(false);
+
+		private final StatementResultCursor cursor;
+
+		private FluxSink<Record> sink;
+
+		static Flux<Record> forCursor(final StatementResultCursor cursor) {
+
+			var emitter = new RecordEmitter(cursor);
+			return Flux.push(emitter::emitOn);
+		}
+
+		private RecordEmitter(final StatementResultCursor cursor) {
+			this.cursor = cursor;
+		}
+
+		private void emitOn(final FluxSink<Record> targetSink) {
+
+			this.sink = targetSink;
+			this.sink.onRequest(toAdd -> {
+				if (this.isActive()) {
+					long r = this.getRequested();
+					if (r == Long.MAX_VALUE) {
+						scheduleEmission();
+					}
+					long u = Operators.addCap(r, toAdd);
+					if (this.setRequested(r, u)) {
+						if (u > 0) {
+							scheduleEmission();
+						}
+					}
+				}
+			});
+
+			this.sink.onCancel(this::deactivate);
+			this.sink.onDispose(this::deactivate);
+		}
+
+		private boolean isEmissionScheduled() {
+			return emissionScheduled.get();
+		}
+
+		private void scheduleEmission() {
+			if (this.isEmissionScheduled() || !this.isActive() || this.getRequested() <= 0) {
+				return;
+			}
+
+			if (emissionScheduled.compareAndSet(false, true)) {
+				Mono.fromCompletionStage(() -> cursor.nextAsync()
+					.whenComplete((record, throwable) -> {
+						if (record == null && throwable == null) {
+							sink.complete();
+						}
+					}))
+					.subscribe(new RecordSubscriber());
+			}
+		}
+
+		private void emissionCompleted() {
+			emissionScheduled.compareAndSet(true, false);
+		}
+
+		private boolean isActive() {
+			return active.get();
+		}
+
+		private void deactivate() {
+			active.set(false);
+		}
+
+		private long getRequested() {
+			return requestsPending.get();
+		}
+
+		private boolean setRequested(final long expect, final long update) {
+			return requestsPending.compareAndSet(expect, update);
+		}
+
+		private class RecordSubscriber implements CoreSubscriber<Record> {
+
+			@Override
+			public void onSubscribe(final Subscription s) {
+				s.request(1);
+			}
+
+			@Override
+			public void onNext(final Record message) {
+
+				long requested = RecordEmitter.this.getRequested();
+				if (requested > 0) {
+					sink.next(message);
+				}
+			}
+
+			@Override
+			public void onError(final Throwable t) {
+
+				RecordEmitter.this.deactivate();
+				sink.error(t);
+			}
+
+			@Override
+			public void onComplete() {
+				RecordEmitter.this.emissionCompleted();
+
+				scheduleEmission();
+			}
+
+			@Override
+			public Context currentContext() {
+				return sink.currentContext();
+			}
+		}
 	}
 }
