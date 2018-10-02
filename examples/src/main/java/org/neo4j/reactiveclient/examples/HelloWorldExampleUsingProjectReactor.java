@@ -28,9 +28,9 @@ import reactor.core.publisher.Mono;
  *
  * @author Michael J. Simons
  */
-public class HelloWorldExample {
+public class HelloWorldExampleUsingProjectReactor {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(HelloWorldExample.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(HelloWorldExampleUsingProjectReactor.class);
 
 	public static void main(final String... args) {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
