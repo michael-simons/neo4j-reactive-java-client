@@ -9,6 +9,19 @@ The Reactive Streams Java Driver does not work with an embedded version of Neo4j
 The test infrastructure is based on https://www.testcontainers.org[Testcontainers] which in turn depend on https://docker.com[Docker].
 Docker must be installed on your machine to run the integration tests.
 
+== Concepts
+
+The main idea is to keep as close to the official https://github.com/neo4j/neo4j-java-driver[Neo4j Java Driver] as possible.
+
+* Not introduce new kind of result sets
+* Creating pendants to the drivers `Session#run()` methods that takes in a Cypher statement and parameters, publishing instances of `org.neo4j.driver.v1.Record`
+* Facilitating the https://neo4j.com/blog/beta-release-java-driver-async-api-neo4j/[asynchronous API] of the driver as much as possible
+* So far handling back pressure in the reactive `Neo4jClient` as such that it just stops requesting new records and relying on the fact that the Driver than stops fetching them
+
+The reactive `Neo4jClient` should only expose http://www.reactive-streams.org/[Reactive Streams] interfaces.
+In the long run, those will be superseded by Javas https://docs.oracle.com/javase/10/docs/api/java/util/concurrent/Flow.html[Flow classes].
+The reactive `Neo4jClient` internally uses https://projectreactor.io/[Project Reactor].
+
 == Versioning
 
 === `@Deprecated`
