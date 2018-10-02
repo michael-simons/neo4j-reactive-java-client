@@ -15,6 +15,8 @@
  */
 package org.neo4j.reactiveclient.examples;
 
+import static org.neo4j.reactiveclient.examples.Examples.recordToString;
+
 import org.neo4j.reactiveclient.Neo4jClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +41,11 @@ public class HelloWorldExampleUsingProjectReactor {
 		var client = Neo4jClients.create("bolt://localhost:7687", "neo4j", "music");
 
 		Flux.from(client.execute("MATCH (n) RETURN n"))
-			.map(r -> r.get("n").asNode().labels())
 			.take(5)
-			.doOnNext(r -> LOGGER.info(r.toString()))
+			.map(recordToString())
+			.doOnNext(r -> LOGGER.info(r))
 			.then(Mono.from(client.close()))
-			.doOnSuccess(aVoid -> System.out.println("Client was closed."))
+			.doOnSuccess(aVoid -> LOGGER.info("Client was closed."))
 			.subscribe();
 	}
 }
