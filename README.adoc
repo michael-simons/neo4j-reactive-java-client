@@ -6,6 +6,9 @@ The Reactive Java Client requires Java 11 higher.
 Goto http://jdk.java.net/11/[JDK 11 General-Availability Release] for binaries for you operating systems.
 The Reactive Streams Java Driver does not work with an embedded version of Neo4j but needs an instance that can be addressed over the Bolt protocol.
 
+The test infrastructure is based on https://www.testcontainers.org[Testcontainers] which in turn depend on https://docker.com[Docker].
+Docker must be installed on your machine to run the integration tests.
+
 == Versioning
 
 === `@Deprecated`

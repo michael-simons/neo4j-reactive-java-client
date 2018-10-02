@@ -52,6 +52,7 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 
 	@Override
 	public Publisher<Record> execute(@NonNull final String query, @Nullable  final Map<String, Object> parameter) {
+
 		return Flux.push(sink ->
 			driver.session().runAsync(query, Optional.ofNullable(parameter).orElseGet(Map::of))
 				.thenCompose(statementResultCursor -> statementResultCursor.forEachAsync(sink::next))

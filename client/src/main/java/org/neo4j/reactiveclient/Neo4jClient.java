@@ -23,7 +23,6 @@ import org.reactivestreams.Publisher;
 import reactor.util.annotation.NonNull;
 import reactor.util.annotation.Nullable;
 
-
 /**
  * The client side representation of a Neo4j instance or cluster, connected through an instance of Neo4js Java-Driver.
  *
