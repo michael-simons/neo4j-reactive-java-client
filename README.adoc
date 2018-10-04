@@ -22,6 +22,14 @@ The reactive `Neo4jClient` should only expose http://www.reactive-streams.org/[R
 In the long run, those will be superseded by Javas https://docs.oracle.com/javase/10/docs/api/java/util/concurrent/Flow.html[Flow classes].
 The reactive `Neo4jClient` internally uses https://projectreactor.io/[Project Reactor].
 
+[[validation-against-the-reactive-streams-tck]]
+=== Validation against the Reactive Streams TCK
+
+The http://www.reactive-streams.org[Reactive Streams initiative] offers a https://github.com/reactive-streams/reactive-streams-jvm/tree/master/tck[TCK].
+This TCK is meant to guide and help Reactive Streams library implementers to validate their implementations against https://github.com/reactive-streams/reactive-streams-jvm[the Reactive Streams specification].
+The `Publisher` returned by the `Neo4jClient` are validated against the TCK in `org.neo4j.reactiveclient.Neo4jClientVerificationTest`.
+We validate all required and optional rules.
+
 == Versioning
 
 === `@Deprecated`
