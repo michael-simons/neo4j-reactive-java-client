@@ -18,11 +18,19 @@ Docker must be installed on your machine to run the integration tests.
 == Concepts
 
 The main idea is to keep as close to the official https://github.com/neo4j/neo4j-java-driver[Neo4j Java Driver] as possible.
+That means, facilitating the https://neo4j.com/blog/beta-release-java-driver-async-api-neo4j/[asynchronous API] of the driver.
+This has some drawbacks:
+For the time being, the Neo4j Java Driver is only asynchronous.
+It stops requesting records from the Server, but doesn't back pressure.
+The server will keep on trying to sent stuff.
 
-* Not introduce new kind of result sets
-* Creating pendants to the drivers `Session#run()` methods that takes in a Cypher statement and parameters, publishing instances of `org.neo4j.driver.v1.Record`
-* Facilitating the https://neo4j.com/blog/beta-release-java-driver-async-api-neo4j/[asynchronous API] of the driver as much as possible
-* So far handling back pressure in the reactive `Neo4jClient` as such that it just stops requesting new records and relying on the fact that the Driver than stops fetching them
+NOTE: So far handling back pressure in the reactive `Neo4jClient` as such that it just stops requesting new records and relying on the fact that the Driver than stops fetching them
+
+Some inspiration has been drawn from the https://r2dbc.io[R2DBC specification].
+R2DBC stands for _Reactive relational database connectivity_ and is an effort to bring reactive programming to relational databases.
+There is a great introduction by https://twitter.com/nebhale[Ben Hale] from Spring One Platform 2018:
+https://www.youtube.com/watch?v=idApf9DMdfk[Reactive relational database connectivity]
+Notice one of the first slides: Reactivity is about back pressure, not being asynchronous!
 
 The reactive `Neo4jClient` should only expose http://www.reactive-streams.org/[Reactive Streams] interfaces.
 In the long run, those will be superseded by Javas https://docs.oracle.com/javase/10/docs/api/java/util/concurrent/Flow.html[Flow classes].
