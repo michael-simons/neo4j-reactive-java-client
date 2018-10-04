@@ -211,9 +211,9 @@
 						<id>validate</id>
 						<phase>validate</phase>
 						<configuration>
-							<configLocation>build/checkstyle.xml</configLocation>
-							<suppressionsLocation>build/checkstyle-suppressions.xml</suppressionsLocation>
-							<headerLocation>build/checkstyle-header.txt</headerLocation>
+							<configLocation>checkstyle/config.xml</configLocation>
+							<suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>
+							<headerLocation>checkstyle/header.txt</headerLocation>
 							<encoding>${project.build.sourceEncoding}</encoding>
 							<consoleOutput>true</consoleOutput>
 							<failsOnError>true</failsOnError>
