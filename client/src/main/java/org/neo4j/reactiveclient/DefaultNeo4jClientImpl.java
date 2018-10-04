@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResultCursor;
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 
 import reactor.core.CoreSubscriber;
@@ -49,17 +48,17 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 	}
 
 	@Override
-	public Publisher<Void> close() {
+	public Mono<Void> close() {
 		return Mono.fromCompletionStage(this.driver::closeAsync);
 	}
 
 	@Override
-	public Publisher<Record> execute(@NonNull final String query) {
+	public Flux<Record> execute(@NonNull final String query) {
 		return execute(query, Map.of());
 	}
 
 	@Override
-	public Publisher<Record> execute(@NonNull final String query, @Nullable final Map<String, Object> parameter) {
+	public Flux<Record> execute(@NonNull final String query, @Nullable final Map<String, Object> parameter) {
 		return Mono.<StatementResultCursor>create(sink ->
 			driver.session().runAsync(query, Optional.ofNullable(parameter).orElseGet(Map::of))
 				.whenComplete((cursor, error) -> {
