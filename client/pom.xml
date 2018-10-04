@@ -54,6 +54,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.reactivestreams</groupId>
+			<artifactId>reactive-streams-tck</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
 			<scope>test</scope>
