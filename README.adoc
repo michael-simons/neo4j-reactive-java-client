@@ -3,6 +3,9 @@
 
 = Neo4j Reactive Java Client
 
+image:https://travis-ci.org/michael-simons/neo4j-reactive-java-client.svg[link="https://travis-ci.org/michael-simons/neo4j-reactive-java-client"]
+image:https://img.shields.io/badge/License-Apache%202.0-green.svg[link="http://www.apache.org/licenses/LICENSE-2.0"]
+
 == Requirements
 
 The Reactive Java Client requires Java 11 higher.
