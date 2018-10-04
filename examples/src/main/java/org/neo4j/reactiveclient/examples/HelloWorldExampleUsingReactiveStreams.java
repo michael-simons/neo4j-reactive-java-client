@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.neo4j.driver.v1.Record;
 import org.neo4j.reactiveclient.Neo4jClients;
+import org.neo4j.reactiveclient.VoidSignal;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
@@ -51,9 +52,9 @@ public class HelloWorldExampleUsingReactiveStreams {
 
 			@Override
 			void canceledOrCompleted() {
-				client.close().subscribe(new AbstractLimitingSubscriber<Void>(1) {
+				client.close().subscribe(new AbstractLimitingSubscriber<VoidSignal>(1) {
 					@Override
-					void next(final Void element) {
+					void next(final VoidSignal element) {
 					}
 
 					@Override

@@ -17,8 +17,12 @@ package org.neo4j.reactiveclient;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
@@ -41,6 +45,16 @@ import reactor.util.context.Context;
  * @since 1.0.0
  */
 final class DefaultNeo4jClientImpl implements Neo4jClient {
+
+	/**
+	 * A helper function to map all completation stages that return voids (null) into a {@link VoidSignal}.
+	 */
+	private static final Function<Void, CompletionStage<VoidSignal>> VOID_TO_VOID_SIGNAL_FUNCTION
+		= realVoid -> CompletableFuture.completedFuture(VoidSignal.INSTANCE);
+
+	/**
+	 * The actual driver instance.
+	 */
 	private final Driver driver;
 
 	DefaultNeo4jClientImpl(final Driver driver) {
@@ -48,8 +62,11 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 	}
 
 	@Override
-	public Mono<Void> close() {
-		return Mono.fromCompletionStage(this.driver::closeAsync);
+	public Mono<VoidSignal> close() {
+
+		final Supplier<CompletionStage<VoidSignal>> completionStageSupplier = () -> this.driver.closeAsync()
+			.thenCompose(VOID_TO_VOID_SIGNAL_FUNCTION);
+		return Mono.fromCompletionStage(completionStageSupplier); // does defer for us.
 	}
 
 	@Override
@@ -59,7 +76,7 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 
 	@Override
 	public Flux<Record> execute(@NonNull final String query, @Nullable final Map<String, Object> parameter) {
-		return Mono.<StatementResultCursor>create(sink ->
+		return Flux.defer(() -> Mono.<StatementResultCursor>create(sink ->
 			driver.session().runAsync(query, Optional.ofNullable(parameter).orElseGet(Map::of))
 				.whenComplete((cursor, error) -> {
 					if (error != null) {
@@ -68,7 +85,7 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 						sink.success(cursor);
 					}
 				})
-		).flatMapMany(RecordEmitter::forCursor);
+		).flatMapMany(RecordEmitter::forCursor));
 	}
 
 	private static class RecordEmitter {
@@ -126,7 +143,7 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 				Mono.fromCompletionStage(() -> cursor.nextAsync()
 					.whenComplete((record, throwable) -> {
 						if (record == null && throwable == null) {
-							sink.complete();
+							sink.complete(); // Signal competition to the upper sink when we reach the end of the result set.
 						}
 					}))
 					.subscribe(new RecordSubscriber());

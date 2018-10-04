@@ -15,29 +15,15 @@
  */
 package org.neo4j.reactiveclient;
 
-import java.util.Map;
-
-import org.neo4j.driver.v1.Record;
-import org.reactivestreams.Publisher;
-
-import reactor.util.annotation.NonNull;
-import reactor.util.annotation.Nullable;
-
 /**
- * The client side representation of a Neo4j instance or cluster, connected through an instance of Neo4js Java-Driver.
+ * To be compatible with RxJava 2 we cannot emit Void from any Publisher.
+ * See <a href="https://github.com/ReactiveX/RxJava/wiki/What%27s-different-in-2.0#nulls">RxJava 2 on Nulls</a>.
+ * Therefor we emmit a Void Signal each time a publisher may only return a single, void item.
  *
  * @author Michael J. Simons
+ *
  * @since 1.0.0
  */
-public interface Neo4jClient {
-	/**
-	 * Closes the client and the underlying driver instance.
-	 *
-	 * @return A publisher signaling successful closing on completion.
-	 */
-	Publisher<VoidSignal> close();
-
-	Publisher<Record> execute(@NonNull String query);
-
-	Publisher<Record> execute(@NonNull String query, @Nullable Map<String, Object> parameter);
+public enum VoidSignal {
+	INSTANCE;
 }
