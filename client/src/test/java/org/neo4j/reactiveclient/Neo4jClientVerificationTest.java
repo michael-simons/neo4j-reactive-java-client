@@ -15,6 +15,8 @@
  */
 package org.neo4j.reactiveclient;
 
+import static org.testcontainers.containers.wait.strategy.Wait.forLogMessage;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -27,7 +29,6 @@ import org.reactivestreams.tck.PublisherVerification;
 import org.reactivestreams.tck.TestEnvironment;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
@@ -62,7 +63,7 @@ public class Neo4jClientVerificationTest extends PublisherVerification<Record> {
 		neo4j = new GenericContainer("neo4j:3.4.7") // TODO Derive from Maven properties
 			.withExposedPorts(7687)
 			.withEnv("NEO4J_AUTH", "none")
-			.waitingFor(new HostPortWaitStrategy());
+			.waitingFor(forLogMessage(".*Bolt enabled on 0\\.0\\.0\\.0:7687\\.\n", 1));
 		neo4j.start();
 
 		var boltURI = new URI("bolt://" + neo4j.getContainerIpAddress() + ":" + neo4j.getMappedPort(7687));
