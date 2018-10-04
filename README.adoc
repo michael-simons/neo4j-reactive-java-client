@@ -1,3 +1,6 @@
+:examples-gh-ref: https://github.com/michael-simons/neo4j-reactive-java-client/tree/master/examples
+:examples-gh-ref-blob: https://github.com/michael-simons/neo4j-reactive-java-client/blob/master/examples
+
 = Neo4j Reactive Java Client
 
 == Requirements
@@ -30,6 +33,15 @@ This TCK is meant to guide and help Reactive Streams library implementers to val
 The `Publisher` returned by the `Neo4jClient` are validated against the TCK in `org.neo4j.reactiveclient.Neo4jClientVerificationTest`.
 We validate all required and optional rules.
 
+== Examples
+
+The link:{examples-gh-ref}[`examples`] subproject provides several examples using several implementations of Reactive Streams to get you started.
+Checkout the "Hello, Worlds" using plain Reactive Streams, http://projectreactor.io[Project Reactor] and http://reactivex.io[RxJava 2] Types:
+
+* link:{examples-gh-ref-blob}/src/main/java/org/neo4j/reactiveclient/examples/HelloWorldExampleUsingReactiveStreams.java[HelloWorld with Reactive Streams]
+* link:{examples-gh-ref-blob}/src/main/java/org/neo4j/reactiveclient/examples/HelloWorldExampleUsingProjectReactor.java[HelloWorld with Project Reactor]
+* link:{examples-gh-ref-blob}/src/main/java/org/neo4j/reactiveclient/examples/HelloWorldExampleUsingRxJava2.java[HelloWorld with RxJava2]
+
 == Versioning
 
 === `@Deprecated`
@@ -40,4 +52,3 @@ APIs marked with the `@Deprecated annotation at the class or method level will r
 
 Michael Simons:: michael.simons@neo4j.com
 Gerrit Meier:: gerrit.meier@neo4j.com
-
