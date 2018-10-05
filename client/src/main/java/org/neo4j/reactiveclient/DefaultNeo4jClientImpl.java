@@ -76,7 +76,7 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 
 	@Override
 	public Flux<Record> execute(@NonNull final String query, @Nullable final Map<String, Object> parameter) {
-		return Flux.defer(() -> Mono.<StatementResultCursor>create(sink ->
+		return Mono.<StatementResultCursor>create(sink ->
 			driver.session().runAsync(query, Optional.ofNullable(parameter).orElseGet(Map::of))
 				.whenComplete((cursor, error) -> {
 					if (error != null) {
@@ -85,7 +85,7 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 						sink.success(cursor);
 					}
 				})
-		).flatMapMany(RecordEmitter::forCursor));
+		).flatMapMany(RecordEmitter::forCursor);
 	}
 
 	private static class RecordEmitter {
