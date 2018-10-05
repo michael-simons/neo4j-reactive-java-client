@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Properties;
 
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Record;
@@ -58,9 +59,11 @@ public class Neo4jClientVerificationTest extends PublisherVerification<Record> {
 	private static Neo4jClient neo4jClient;
 
 	@BeforeClass
-	public static void initializeNeo4j() throws URISyntaxException {
+	public static void initializeNeo4j() throws Exception {
+		var buildInfo = new Properties();
+		buildInfo.load(Neo4jClientVerificationTest.class.getResourceAsStream("/META-INF/build-info.properties"));
 
-		neo4j = new GenericContainer("neo4j:3.4.7") // TODO Derive from Maven properties
+		neo4j = new GenericContainer(String.format("neo4j:%s", buildInfo.get("neo4j.version")))
 			.withExposedPorts(7687)
 			.withEnv("NEO4J_AUTH", "none")
 			.waitingFor(forLogMessage(".*Bolt enabled on 0\\.0\\.0\\.0:7687\\.\n", 1));
