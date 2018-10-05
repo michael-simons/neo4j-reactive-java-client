@@ -17,12 +17,8 @@ package org.neo4j.reactiveclient;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
@@ -47,12 +43,6 @@ import reactor.util.context.Context;
 final class DefaultNeo4jClientImpl implements Neo4jClient {
 
 	/**
-	 * A helper function to map all completation stages that return voids (null) into a {@link VoidSignal}.
-	 */
-	private static final Function<Void, CompletionStage<VoidSignal>> VOID_TO_VOID_SIGNAL_FUNCTION
-		= realVoid -> CompletableFuture.completedFuture(VoidSignal.INSTANCE);
-
-	/**
 	 * The actual driver instance.
 	 */
 	private final Driver driver;
@@ -62,11 +52,8 @@ final class DefaultNeo4jClientImpl implements Neo4jClient {
 	}
 
 	@Override
-	public Mono<VoidSignal> close() {
-
-		final Supplier<CompletionStage<VoidSignal>> completionStageSupplier = () -> this.driver.closeAsync()
-			.thenCompose(VOID_TO_VOID_SIGNAL_FUNCTION);
-		return Mono.fromCompletionStage(completionStageSupplier); // does defer for us.
+	public Mono<Void> close() {
+		return Mono.fromCompletionStage(this.driver::closeAsync); // does defer for us.
 	}
 
 	@Override

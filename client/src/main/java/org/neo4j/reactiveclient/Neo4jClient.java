@@ -35,7 +35,7 @@ public interface Neo4jClient {
 	 *
 	 * @return A publisher signaling successful closing on completion.
 	 */
-	Publisher<VoidSignal> close();
+	Publisher<Void> close();
 
 	Publisher<Record> execute(@NonNull String query);
 

@@ -15,13 +15,15 @@
  */
 package org.neo4j.reactiveclient.examples;
 
+import static org.neo4j.reactiveclient.examples.Examples.recordToString;
+
 import org.neo4j.reactiveclient.Neo4jClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
-import io.reactivex.Single;
 
 /**
  * Simple Hello World.
@@ -40,11 +42,10 @@ public class HelloWorldExampleUsingRxJava2 {
 
 		Flowable.fromPublisher(client.execute("MATCH (n) RETURN n"))
 			.take(5)
-			.map(r -> r.get("n").asNode().labels().toString())
+			.map(r -> recordToString().apply(r)) // This thing doesn't take java.util.function but io.reactivex.functions.Function
 			.doOnNext(r -> LOGGER.info(r))
-			.toList()
-			.flatMap(ignored -> Single.fromPublisher(client.close()))
-			.doOnSuccess(aVoid -> LOGGER.info("Client was closed."))
+			.concatWith(Completable.fromPublisher(client.close()))
+			.doOnComplete(() -> LOGGER.info("Client was closed."))
 			.subscribe();
 	}
 }

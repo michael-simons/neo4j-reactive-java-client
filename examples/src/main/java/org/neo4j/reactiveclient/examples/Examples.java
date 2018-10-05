@@ -25,7 +25,7 @@ import org.neo4j.driver.v1.Record;
  * @author Michael J. Simons
  */
 public interface Examples {
-	static Function<Record, String> recordToString() {
+	static Function<? super Record, String> recordToString() {
 		return r -> r.get("n").asNode().labels().toString();
 	}
 }
