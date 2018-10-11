@@ -1,0 +1,82 @@
+= Ideas for a new Neo4j Java Client
+Michael Simons <michael.simons@neo4j.com>
+:doctype: article
+:keywords: Client, Driver, Reactive programming, transport
+:lang: en
+:listing-caption: Listing
+:source-highlighter: coderay
+:icons: font
+:sectlink: true
+:sectanchors: true
+:numbered: true
+:xrefstyle: short
+
+[abstract]
+--
+A assorted collection of ideas for a simplified way to connect Java applications against Neo4j with Bolt or Embedded.
+--
+
+== Problem
+
+* Neo4j-OGM has several "drivers", that are actual clients for different transports
+* Hard to understand the differences between those clients and the "real" Java-Driver
+* Where does a potential reactive driver fits in?
+
+== What features are needed from an OGM (light) side of things?
+
+* Execute arbitrary cypher queries with parameters
+* Extracting result sets without being directly dependent on Java-Driver or embedded types
+* Grouping one or more queries inside a transaction
+* Means of signaling the success or failure of a transaction with a transaction status or similar, no need to expose an additional, non-native transaction
+
+The proposed `Neo4jClient` here already exposes some of those methods, albeit in a reactive manner:
+
+[source,java]
+[[current-state-of-proposal]]
+.Current state of proposal
+----
+
+	Publisher<Void> close();
+
+	Publisher<Record> execute(@NonNull String query);
+
+	Publisher<Record> execute(@NonNull String query, @Nullable Map<String, Object> parameter);
+----
+
+In addition Something like `doWithinTransaction(BiConsumer<StatementRunner, TransactionState>)` would be enough to span transactional boundaries.
+
+== Possible hierarchy
+
+.Moving parts in type conversion
+[[ogm-type-convers]]
+[plantuml, ogm-type-convers, png]
+----
+@startuml
+
+interface Neo4jClient
+interface ReactiveNeo4jClient
+
+class EmbeddedNeo4jClient
+class DefaultNeo4jClient
+
+ReactiveNeo4jClient <|-- Neo4jClient
+Neo4jClient <|-- EmbeddedNeo4jClient
+ReactiveNeo4jClient <|-- DefaultNeo4jClient
+
+interface Neo4jTransport
+
+class BoltTransport
+class EmbeddedTransport
+
+Neo4jTransport <|-- BoltTransport
+Neo4jTransport <|-- EmbeddedTransport
+
+EmbeddedNeo4jClient *-- EmbeddedTransport: uses
+DefaultNeo4jClient *-- BoltTransport: uses
+
+@enduml
+----
+
+I suggest not having a dedicated `ReactiveNeo4jClient` but having the `DefaultNeo4jClient` the reactive trait by default.
+The default transport mode can be Bolt, also against the embedded database.
+If one needs to interact directly with the graphdatabaseservice, one can still decide using just `Neo4Client` and then maybe use the already proposed `unwrap()` method to retrieve the underlying driver or graphdatabaseservice instance.
