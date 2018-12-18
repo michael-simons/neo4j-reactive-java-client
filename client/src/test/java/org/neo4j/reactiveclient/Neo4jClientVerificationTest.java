@@ -15,21 +15,19 @@
  */
 package org.neo4j.reactiveclient;
 
-import static org.testcontainers.containers.wait.strategy.Wait.forLogMessage;
-
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Properties;
 
+import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Record;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.tck.PublisherVerification;
 import org.reactivestreams.tck.TestEnvironment;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Neo4jContainer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
@@ -55,7 +53,7 @@ public class Neo4jClientVerificationTest extends PublisherVerification<Record> {
 
 	private final static String QUERY = "UNWIND RANGE(1, $numberOfRecords) AS n RETURN 'String Number' + n";
 
-	private static GenericContainer neo4j;
+	private static Neo4jContainer neo4j;
 	private static Neo4jClient neo4jClient;
 
 	@BeforeClass
@@ -63,14 +61,11 @@ public class Neo4jClientVerificationTest extends PublisherVerification<Record> {
 		var buildInfo = new Properties();
 		buildInfo.load(Neo4jClientVerificationTest.class.getResourceAsStream("/META-INF/build-info.properties"));
 
-		neo4j = new GenericContainer(String.format("neo4j:%s", buildInfo.get("neo4j.version")))
-			.withExposedPorts(7687)
-			.withEnv("NEO4J_AUTH", "none")
-			.waitingFor(forLogMessage(".*Bolt enabled on 0\\.0\\.0\\.0:7687\\.\n", 1));
+		neo4j = new Neo4jContainer(String.format("neo4j:%s", buildInfo.get("neo4j.version")));
 		neo4j.start();
 
 		var boltURI = new URI("bolt://" + neo4j.getContainerIpAddress() + ":" + neo4j.getMappedPort(7687));
-		neo4jClient = Neo4jClients.create(GraphDatabase.driver(boltURI));
+		neo4jClient = Neo4jClients.create(GraphDatabase.driver(boltURI, AuthTokens.basic("neo4j", neo4j.getAdminPassword())));
 	}
 
 	public Neo4jClientVerificationTest() {
@@ -95,8 +90,8 @@ public class Neo4jClientVerificationTest extends PublisherVerification<Record> {
 	@AfterClass
 	static void tearDownNeo4j() {
 		Mono.from(neo4jClient.close())
-			.then(Mono.fromRunnable(neo4j::stop))
-			.block();
+				.then(Mono.fromRunnable(neo4j::stop))
+				.block();
 	}
 
 }

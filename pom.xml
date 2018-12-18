@@ -81,7 +81,7 @@
 		<reactive-streams-tck.version>1.0.2</reactive-streams-tck.version>
 		<rxjava.version>2.2.2</rxjava.version>
 		<slf4j.version>1.7.25</slf4j.version>
-		<testcontainers.version>1.9.1</testcontainers.version>
+		<testcontainers.version>1.10.3</testcontainers.version>
 	</properties>
 
 	<dependencyManagement>
@@ -140,7 +140,7 @@
 			</dependency>
 			<dependency>
 				<groupId>org.testcontainers</groupId>
-				<artifactId>testcontainers</artifactId>
+				<artifactId>neo4j</artifactId>
 				<version>${testcontainers.version}</version>
 			</dependency>
 			<dependency>
